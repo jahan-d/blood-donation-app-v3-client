@@ -3,4 +3,5 @@
 @tailwind components;
 @tailwind utilities;
 
-@plugin "daisyui"; /* Add DaisyUI plugin */
+@plugin "daisyui";
+/* Add DaisyUI plugin */

@@ -1,6 +1,6 @@
 // src/routes/PrivateRoute.jsx
 import { Navigate } from "react-router";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../contexts/AuthContext/AuthProvider";
 
 const PrivateRoute = ({ children }) => {
   const { user, firebaseUser, loading } = useAuth();

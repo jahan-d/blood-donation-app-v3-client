@@ -1,7 +1,7 @@
 // src/router/router.jsx
 import { createBrowserRouter, Navigate } from "react-router";
-import MainLayout from "../layout/MainLayout";
-import DashboardLayout from "../pages/dashboard/DashboardLayout";
+import RootLayout from "../layouts/RootLayout";
+import DashboardLayout from "../layouts/DashboardLayout";
 
 // Public Pages
 import Home from "../pages/Home";
@@ -9,6 +9,10 @@ import Login from "../pages/Login";
 import Register from "../pages/Register";
 import Search from "../pages/Search";
 import DonationRequests from "../pages/DonationRequests";
+import DonationRequestDetails from "../pages/DonationRequestDetails";
+import Blog from "../pages/Blog";
+import Contact from "../pages/Contact";
+import ErrorPage from "../pages/ErrorPage";
 
 // Dashboard Pages
 import Profile from "../pages/dashboard/Profile";
@@ -17,6 +21,8 @@ import CreateDonationRequest from "../pages/dashboard/CreateDonationRequest";
 import AllUsers from "../pages/dashboard/AllUsers";
 import AllDonationRequests from "../pages/dashboard/AllDonationRequests";
 import Funding from "../pages/dashboard/Funding";
+import AddBlog from "../pages/dashboard/AddBlog";
+import DashboardHome from "../pages/dashboard/DashboardHome";
 
 import PrivateRoute from "../components/PrivateRoute";
 import RoleRoute from "../components/RoleRoute";
@@ -29,13 +35,16 @@ const volunteerRoles = ["volunteer"];
 export const router = createBrowserRouter([
   {
     path: "/",
-    element: <MainLayout />,
+    element: <RootLayout />,
     children: [
       { path: "/", element: <Home /> },
       { path: "/login", element: <Login /> },
       { path: "/register", element: <Register /> },
       { path: "/search", element: <Search /> },
       { path: "/donation-requests", element: <DonationRequests /> },
+      { path: "/donation-requests/:id", element: <DonationRequestDetails /> },
+      { path: "/blog", element: <Blog /> },
+      { path: "/contact", element: <Contact /> },
     ],
   },
 
@@ -47,6 +56,7 @@ export const router = createBrowserRouter([
       </PrivateRoute>
     ),
     children: [
+      { index: true, element: <DashboardHome /> },
       { path: "profile", element: <Profile /> },
 
       // Donor routes
@@ -73,6 +83,7 @@ export const router = createBrowserRouter([
           { path: "all-users", element: <AllUsers /> },
           { path: "all-donation-requests", element: <AllDonationRequests /> },
           { path: "funding", element: <Funding /> },
+          { path: "content-management-add-blog", element: <AddBlog /> },
         ],
       },
 
@@ -86,10 +97,11 @@ export const router = createBrowserRouter([
         children: [
           { path: "all-donation-requests", element: <AllDonationRequests /> },
           { path: "funding", element: <Funding /> },
+          { path: "content-management-add-blog", element: <AddBlog /> },
         ],
       },
     ],
   },
 
-  { path: "*", element: <Navigate to="/" replace /> },
+  { path: "*", element: <ErrorPage /> },
 ]);

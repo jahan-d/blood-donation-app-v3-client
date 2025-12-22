@@ -2,16 +2,18 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
 import { RouterProvider } from "react-router";
-import AuthProvider from "./context/AuthContext.jsx"; // default import
-import QueryProvider from "./providers/QueryProvider.jsx";
-import { router } from "./router/router.jsx";
+import AuthProvider from "./contexts/AuthContext/AuthProvider.jsx";
+import { router } from "./routes/router.jsx";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+const queryClient = new QueryClient();
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
-    <AuthProvider>
-      <QueryProvider>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
         <RouterProvider router={router} />
-      </QueryProvider>
-    </AuthProvider>
+      </AuthProvider>
+    </QueryClientProvider>
   </StrictMode>
 );

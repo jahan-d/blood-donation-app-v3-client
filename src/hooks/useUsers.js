@@ -1,7 +1,7 @@
 // src/hooks/useUsers.js
 import { useContext } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { AuthContext } from "../context/AuthContext";
+import { AuthContext } from "../contexts/AuthContext/AuthProvider";
 
 const useUsers = (status) => {
   const { axiosSecure } = useContext(AuthContext);

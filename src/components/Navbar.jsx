@@ -1,6 +1,6 @@
 // src/components/Navbar.jsx
 import { Link } from "react-router";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../contexts/AuthContext/AuthProvider";
 import useUserRole from "../hooks/useUserRole";
 
 const Navbar = () => {
@@ -21,7 +21,10 @@ const Navbar = () => {
         </Link>
 
         <Link to="/search" className="btn btn-ghost btn-sm">
-          Search Donors
+          Search
+        </Link>
+        <Link to="/blog" className="btn btn-ghost btn-sm">
+          Blog
         </Link>
 
         {!user && !roleLoading && (
@@ -56,6 +59,15 @@ const Navbar = () => {
                 className="btn btn-sm btn-ghost"
               >
                 All Requests
+              </Link>
+            )}
+
+            {(role === "admin" || role === "volunteer") && (
+              <Link
+                to="/dashboard/content-management-add-blog"
+                className="btn btn-sm btn-ghost"
+              >
+                Add Blog
               </Link>
             )}
 

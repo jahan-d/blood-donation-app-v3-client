@@ -1,7 +1,7 @@
 // src/routes/RoleRoute.jsx
 import { Navigate } from "react-router";
 import useUserRole from "../hooks/useUserRole";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../contexts/AuthContext/AuthProvider";
 
 const RoleRoute = ({ children, allowedRoles }) => {
   const { user, loading } = useAuth();

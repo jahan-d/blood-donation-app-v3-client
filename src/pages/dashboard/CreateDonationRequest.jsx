@@ -2,7 +2,9 @@ import { useForm } from "react-hook-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { toast } from "react-hot-toast";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../contexts/AuthContext/AuthProvider";
+import { districts } from "../../data/districts";
+import { useState } from "react";
 
 const bloodGroups = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 
@@ -12,6 +14,7 @@ const CreateDonationRequest = () => {
   const queryClient = useQueryClient();
 
   const { register, handleSubmit, reset } = useForm();
+  const [selectedDistrict, setSelectDistrict] = useState("");
 
   const mutation = useMutation({
     mutationFn: async (data) => {
@@ -74,21 +77,37 @@ const CreateDonationRequest = () => {
           className="input input-bordered"
         />
 
-        <input
+        <select
           {...register("recipientDistrict", { required: true })}
-          placeholder="Recipient District"
-          className="input input-bordered"
-        />
+          className="select select-bordered"
+          onChange={(e) => setSelectDistrict(e.target.value)}
+        >
+          <option value="">Select District</option>
+          {districts.map((d) => (
+            <option key={d.name} value={d.name}>
+              {d.name}
+            </option>
+          ))}
+        </select>
 
-        <input
+        <select
           {...register("recipientUpazila", { required: true })}
-          placeholder="Recipient Upazila"
-          className="input input-bordered"
-        />
+          className="select select-bordered"
+          disabled={!selectedDistrict}
+        >
+          <option value="">Select Upazila</option>
+          {districts
+            .find((d) => d.name === selectedDistrict)
+            ?.upazilas.map((u) => (
+              <option key={u} value={u}>
+                {u}
+              </option>
+            ))}
+        </select>
 
         <input
           {...register("fullAddress", { required: true })}
-          placeholder="Full Address"
+          placeholder="Full Address (Ward, House No, etc.)"
           className="input input-bordered md:col-span-2"
         />
 
@@ -108,6 +127,7 @@ const CreateDonationRequest = () => {
           type="date"
           {...register("donationDate", { required: true })}
           className="input input-bordered"
+          min={new Date().toISOString().split("T")[0]} // Prevent past dates
         />
 
         <input

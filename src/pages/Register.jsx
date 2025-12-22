@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../contexts/AuthContext/AuthProvider";
 import { toast } from "react-hot-toast";
 
 const Register = () => {
@@ -29,7 +29,7 @@ const Register = () => {
     }
 
     try {
-      await createUser(
+      const res = await createUser(
         formData.email,
         formData.password,
         formData.name,
@@ -40,6 +40,7 @@ const Register = () => {
           upazila: formData.upazila,
         }
       );
+      // console.log(res);
       toast.success("Registration successful!");
       // Do NOT navigate here
     } catch (err) {

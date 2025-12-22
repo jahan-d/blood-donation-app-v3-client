@@ -4,8 +4,10 @@ import { useState } from "react";
 import { toast } from "react-hot-toast";
 
 const STATUSES = ["pending", "inprogress", "done", "canceled"];
+import { useAuth } from "../../contexts/AuthContext/AuthProvider";
 
-const AllDonationRequests = ({ currentUser }) => {
+const AllDonationRequests = () => {
+  const { user: currentUser } = useAuth();
   const token = localStorage.getItem("access-token");
   const queryClient = useQueryClient();
 
@@ -42,6 +44,18 @@ const AllDonationRequests = ({ currentUser }) => {
     onError: () => toast.error("Failed to update status"),
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: async (id) => axios.delete(`${import.meta.env.VITE_API_URL}/donation-requests/${id}`, { headers: { Authorization: `Bearer ${token}` } }),
+    onSuccess: () => { toast.success("Request deleted"); queryClient.invalidateQueries(["all-donation-requests"]); },
+    onError: () => toast.error("Failed to delete")
+  });
+
+  const handleDelete = (id) => {
+    if (window.confirm("Are you sure you want to delete this check?")) {
+      deleteMutation.mutate(id);
+    }
+  };
+
   if (isLoading) return <p className="p-5">Loading...</p>;
 
   return (
@@ -72,8 +86,7 @@ const AllDonationRequests = ({ currentUser }) => {
             <tr>
               <th>Recipient</th>
               <th>Location</th>
-              <th>Date</th>
-              <th>Time</th>
+              <th>Date/Time</th>
               <th>Blood</th>
               <th>Status</th>
               <th>Donor</th>
@@ -87,44 +100,59 @@ const AllDonationRequests = ({ currentUser }) => {
                 <td>
                   {req.recipientDistrict}, {req.recipientUpazila}
                 </td>
-                <td>{req.donationDate}</td>
-                <td>{req.donationTime}</td>
+                <td>{req.donationDate} at {req.donationTime}</td>
                 <td>{req.bloodGroup}</td>
-                <td className="capitalize">{req.status}</td>
+                <td>
+                  <span className={`badge ${req.status === 'inprogress' ? 'badge-warning' : req.status === 'done' ? 'badge-success' : 'badge-ghost'}`}>
+                    {req.status}
+                  </span>
+                </td>
                 <td>
                   {req.status === "inprogress"
                     ? `${req.donorName || "—"}`
                     : "—"}
                 </td>
 
-                <td>
-                  {/* Volunteers & Admin can update status */}
+                <td className="flex flex-col gap-2">
+                  {/* Status Update - Admin & Volunteer */}
                   {(currentUser.role === "admin" ||
                     currentUser.role === "volunteer") && (
-                    <select
-                      className="select select-sm select-bordered"
-                      value={req.status}
-                      onChange={(e) =>
-                        statusMutation.mutate({
-                          id: req._id,
-                          status: e.target.value,
-                        })
-                      }
-                    >
-                      {STATUSES.map((s) => (
-                        <option key={s} value={s}>
-                          {s}
-                        </option>
-                      ))}
-                    </select>
-                  )}
+                      <select
+                        className="select select-xs select-bordered mb-1"
+                        value={req.status}
+                        onChange={(e) =>
+                          statusMutation.mutate({
+                            id: req._id,
+                            status: e.target.value,
+                          })
+                        }
+                      >
+                        {STATUSES.map((s) => (
+                          <option key={s} value={s}>
+                            {s}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+
+                  <div className="flex gap-1 flex-wrap">
+                    <Link to={`/donation-requests/${req._id}`} className="btn btn-xs btn-info">View</Link>
+
+                    {/* Admin Only Actions */}
+                    {currentUser.role === "admin" && (
+                      <>
+                        <Link to={`/dashboard/update-donation-request/${req._id}`} className="btn btn-xs btn-primary">Edit</Link>
+                        <button className="btn btn-xs btn-error" onClick={() => handleDelete(req._id)}>Delete</button>
+                      </>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}
 
             {!requests.length && (
               <tr>
-                <td colSpan="8" className="text-center py-6">
+                <td colSpan="7" className="text-center py-6">
                   No donation requests found
                 </td>
               </tr>

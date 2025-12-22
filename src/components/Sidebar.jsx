@@ -1,7 +1,7 @@
 // src/components/Sidebar.jsx
 import { NavLink } from "react-router";
 import { FaUser, FaUsers, FaDonate, FaHeart, FaClipboardList, FaHome } from "react-icons/fa";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../contexts/AuthContext/AuthProvider";
 import useUserRole from "../hooks/useUserRole";
 
 const Sidebar = () => {

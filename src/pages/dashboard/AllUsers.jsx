@@ -3,26 +3,36 @@ import axios from "axios";
 import { toast } from "react-hot-toast";
 import { useState } from "react";
 
-const AllUsers = ({ currentUser }) => {
+import { useAuth } from "../../contexts/AuthContext/AuthProvider";
+
+const AllUsers = () => {
+  const { user: currentUser } = useAuth();
   const token = localStorage.getItem("access-token");
   const queryClient = useQueryClient();
 
   const [statusFilter, setStatusFilter] = useState("");
   const [page, setPage] = useState(1);
 
-  const { data: users = [], isLoading } = useQuery({
+  // Server-side pagination
+  const { data, isLoading } = useQuery({
     queryKey: ["users", statusFilter, page],
     queryFn: async () => {
       const res = await axios.get(
         `${import.meta.env.VITE_API_URL}/users`,
         {
-          params: { status: statusFilter || undefined },
+          params: { status: statusFilter || undefined, page, limit: 10 },
           headers: { Authorization: `Bearer ${token}` },
         }
       );
       return res.data;
     },
+    keepPreviousData: true,
   });
+
+  const users = data?.users || [];
+  const total = data?.total || 0;
+  const totalPages = Math.ceil(total / 10);
+
 
   const updateRole = async (id, role) => {
     try {
@@ -102,11 +112,10 @@ const AllUsers = ({ currentUser }) => {
                 </td>
                 <td>
                   <span
-                    className={`badge ${
-                      user.status === "blocked"
-                        ? "badge-error"
-                        : "badge-success"
-                    }`}
+                    className={`badge ${user.status === "blocked"
+                      ? "badge-error"
+                      : "badge-success"
+                      }`}
                   >
                     {user.status}
                   </span>
@@ -157,6 +166,25 @@ const AllUsers = ({ currentUser }) => {
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Pagination Controls */}
+      <div className="flex justify-center mt-6 btn-group">
+        <button
+          className="btn"
+          disabled={page === 1}
+          onClick={() => setPage((p) => Math.max(1, p - 1))}
+        >
+          «
+        </button>
+        <button className="btn">Page {page}</button>
+        <button
+          className="btn"
+          disabled={page >= totalPages}
+          onClick={() => setPage((p) => p + 1)}
+        >
+          »
+        </button>
       </div>
     </div>
   );

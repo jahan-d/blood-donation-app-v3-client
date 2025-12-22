@@ -1,26 +1,31 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
-import { toast } from "react-hot-toast";
+import { districts } from "../data/districts";
+
+const bloodGroups = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 
 const Search = () => {
-  const [searchTerm, setSearchTerm] = useState("");
+  const [bloodGroup, setBloodGroup] = useState("");
+  const [district, setDistrict] = useState("");
+  const [upazila, setUpazila] = useState("");
 
-  const { data: requests = [], isLoading, isError, refetch } = useQuery({
-    queryKey: ["searchRequests", searchTerm],
+  const { data: donors = [], isLoading, refetch } = useQuery({
+    queryKey: ["searchDonors", bloodGroup, district, upazila],
     queryFn: async () => {
-      try {
-        const res = await axios.get(
-          `${import.meta.env.VITE_API_URL}/donation-requests/search`,
-          { params: { q: searchTerm } }
-        );
-        return res.data;
-      } catch (err) {
-        toast.error("Failed to fetch donation requests");
-        return [];
-      }
+      // Only fetch if at least one filter is applied or on button click
+      const params = {};
+      if (bloodGroup) params.bloodGroup = bloodGroup;
+      if (district) params.district = district;
+      if (upazila) params.upazila = upazila;
+
+      const res = await axios.get(
+        `${import.meta.env.VITE_API_URL}/search/donors`,
+        { params }
+      );
+      return res.data;
     },
-    keepPreviousData: true,
+    enabled: false, // Wait for search button
   });
 
   const handleSearch = (e) => {
@@ -30,44 +35,92 @@ const Search = () => {
 
   return (
     <div className="container mx-auto p-5">
-      <h2 className="text-2xl font-bold mb-5">Search Donation Requests</h2>
+      <h2 className="text-3xl font-bold mb-6 text-center">Search Donors</h2>
 
-      <form onSubmit={handleSearch} className="mb-5 flex gap-2">
-        <input
-          type="text"
-          placeholder="Search by blood group, district, or upazila"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="input input-bordered flex-1"
-        />
-        <button type="submit" className="btn btn-primary">
+      <form
+        onSubmit={handleSearch}
+        className="bg-base-200 p-6 rounded-lg shadow-md mb-8 grid md:grid-cols-4 gap-4"
+      >
+        <select
+          className="select select-bordered w-full"
+          value={bloodGroup}
+          onChange={(e) => setBloodGroup(e.target.value)}
+          required
+        >
+          <option value="">Blood Group</option>
+          {bloodGroups.map((bg) => (
+            <option key={bg} value={bg}>
+              {bg}
+            </option>
+          ))}
+        </select>
+
+        <select
+          className="select select-bordered w-full"
+          value={district}
+          onChange={(e) => {
+            setDistrict(e.target.value);
+            setUpazila(""); // Reset upazila on district change
+          }}
+          required
+        >
+          <option value="">District</option>
+          {districts.map((d) => (
+            <option key={d.name} value={d.name}>
+              {d.name}
+            </option>
+          ))}
+        </select>
+
+        <select
+          className="select select-bordered w-full"
+          value={upazila}
+          onChange={(e) => setUpazila(e.target.value)}
+          disabled={!district}
+          required
+        >
+          <option value="">Upazila</option>
+          {districts
+            .find((d) => d.name === district)
+            ?.upazilas.map((u) => (
+              <option key={u} value={u}>
+                {u}
+              </option>
+            ))}
+        </select>
+
+        <button type="submit" className="btn btn-primary w-full">
           Search
         </button>
       </form>
 
-      {isLoading && <p className="text-center">Loading...</p>}
-      {isError && <p className="text-center text-red-500">Error loading results.</p>}
+      {isLoading && <p className="text-center">Searching...</p>}
 
-      {!isLoading && requests.length === 0 && searchTerm && (
-        <p className="text-center">No results found for "{searchTerm}"</p>
+      {!isLoading && donors.length === 0 && (
+        <p className="text-center text-gray-500">No donors found with these criteria.</p>
       )}
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {requests.map((req) => (
-          <div key={req._id} className="card shadow-lg p-5 bg-base-200">
-            <h3 className="text-xl font-semibold mb-1">
-              {req.title || "Donation Request"}
-            </h3>
-            {req.description && <p className="text-sm mb-2">{req.description}</p>}
-            <p>
-              <strong>Requested By:</strong> {req.requesterEmail}
-            </p>
-            <p>
-              <strong>Blood Group:</strong> {req.bloodGroup}
-            </p>
-            <p>
-              <strong>Location:</strong> {req.district}, {req.upazila}
-            </p>
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {donors.map((donor) => (
+          <div key={donor._id} className="card bg-base-100 shadow-xl border">
+            <div className="card-body items-center text-center">
+              <div className="avatar">
+                <div className="w-20 rounded-full">
+                  <img
+                    src={donor.avatar || "https://i.ibb.co/ZYW3VTp/brown-brim.png"}
+                    alt={donor.name}
+                  />
+                </div>
+              </div>
+              <h3 className="card-title mt-2">{donor.name}</h3>
+              <div className="badge badge-error text-white font-bold mb-2">
+                {donor.bloodGroup}
+              </div>
+              <p className="text-sm text-gray-600">
+                {donor.district}, {donor.upazila}
+              </p>
+              <p className="text-xs text-gray-400 mt-2 truncate max-w-xs">{donor.email}</p>
+            </div>
           </div>
         ))}
       </div>
