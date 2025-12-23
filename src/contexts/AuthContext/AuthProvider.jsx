@@ -52,6 +52,14 @@ const AuthProvider = ({ children }) => {
       ...extraData,
     });
 
+    // Manual sync to handle race condition with onAuthStateChanged
+    const tokenRes = await axios.post(`${import.meta.env.VITE_API_URL}/jwt`, {
+      email,
+    });
+    localStorage.setItem("access-token", tokenRes.data.token);
+    const profileRes = await axiosSecure.get("/users/profile");
+    setUser(profileRes.data);
+
     return result;
   };
 

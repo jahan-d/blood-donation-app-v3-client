@@ -1,7 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { toast } from "react-hot-toast";
-import { useNavigate } from "react-router";
+import { useNavigate, Link } from "react-router";
+import { useState } from "react";
 
 const MyDonationRequests = () => {
   const token = localStorage.getItem("access-token");
@@ -32,6 +33,37 @@ const MyDonationRequests = () => {
   const total = data?.total || 0;
   const totalPages = Math.ceil(total / limit);
 
+  const statusMutation = useMutation({
+    mutationFn: async ({ id, status }) => {
+      return axios.patch(
+        `${import.meta.env.VITE_API_URL}/donation-requests/status/${id}`,
+        { status },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+    },
+    onSuccess: () => {
+      toast.success("Status updated");
+      queryClient.invalidateQueries(["my-donation-requests"]);
+    },
+    onError: () => toast.error("Failed to update status"),
+  });
+
+  const handleStatusUpdate = (id, status) => {
+    statusMutation.mutate({ id, status });
+  };
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id) => axios.delete(`${import.meta.env.VITE_API_URL}/donation-requests/${id}`, { headers: { Authorization: `Bearer ${token}` } }),
+    onSuccess: () => { toast.success("Request deleted"); queryClient.invalidateQueries(["my-donation-requests"]); },
+    onError: () => toast.error("Failed to delete")
+  });
+
+  const handleDelete = (id) => {
+    if (window.confirm("Are you sure you want to delete this check?")) {
+      deleteMutation.mutate(id);
+    }
+  };
+
   if (isLoading) return <p className="p-10">Loading...</p>;
 
   return (
@@ -39,24 +71,9 @@ const MyDonationRequests = () => {
       <h2 className="text-2xl font-bold mb-5">My Donation Requests</h2>
 
       <div className="flex justify-between mb-4">
-        {/* Helper text since server doesn't support status filtering yet for 'my' requests, but we keep the UI consistent or remove it. 
-            The requirement said "Filter by status" for "My Donation Requests".
-            Wait, I only updated server for pagination, not filtering on "GET /my".
-            Let's check if I should update server for filter too.
-            Implementation plan said: "GET /donation-requests/my Accepts page and limit".
-            I missed "status". But Filter IS a requirement.
-            I will rely on Client Side Filtering for "My" requests if I have to, BUT
-            Compliance said "Reduce data load". Loading ALL to filter client side violates "reduce data load" if the list is huge.
-            However, user is a single donor. They won't have 1000s of requests.
-            The CRITICAL part is pagination.
-            I will use the server pagination.
-            If I want to support status filter + pagination, I need to update server to accept status too.
-            I'll update the server endpoint for status filter in a moment to be 100% safe.
-            For now, let's assume I will update server to accept status.
-         */}
+        {/* Helper text since server doesn't support status filtering yet for 'my' requests, but we keep the UI consistent or remove it. */}
         <div className="flex gap-2 items-center">
           <label>Filter by Status:</label>
-          {/* If I haven't updated server for status, passing it won't hurt, it just won't filter server side unless I fix server. */}
           <select className="select select-bordered select-sm" value={filter} onChange={(e) => { setFilter(e.target.value); setPage(1); }}>
             <option value="">All</option>
             <option value="pending">Pending</option>
