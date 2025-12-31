@@ -188,5 +188,6 @@ You may modify and reuse it freely.
 ✨ Author
 Jahan
 Computer Science Student
-Aspiring Full-Stack Developer
->>>>>>> df15295966f80ee2f34bbbe0e0bb2289c0549546
+Aspiring Full-Stack Developer — MERN
+Portfolio: https://jahan-d.web.app
+GitHub: https://github.com/jahan-d
