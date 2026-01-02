@@ -1,193 +1,87 @@
-<<<<<<< HEAD
-# Blood Donation Application (v3)
+# 🩸 Blood Donation Application — Client
 
-A MERN stack application to connect blood donors with those in need.
+Frontend application for the **Blood Donation Platform**, built with modern React and optimized for performance, accessibility, and scalability.
 
-## Live URL
-[
-blooddonationapp-lsuveq169-jahan-ds-projects.vercel.app
-blooddonationappv3.web.app/
-]
+## 🚀 Overview
 
-## Features
-- **Authentication**: JWT-based login/register with functionality for Donors, Volunteers, and Admins.
-- **Dashboard**: Role-based dashboards for managing requests, users, and funding.
-- **Donation Requests**: Create, view, edit, and delete donation requests.
-- **Search**: Search for blood donors by blood group and location.
-- **Funding**: Secure donation system using Stripe.
-- **Blog**: Read and manage health-related blogs.
-- **Responsiveness**: Fully responsive design for mobile, tablet, and desktop.
+This is the **frontend (client-side)** of the Blood Donation Application.
+It provides a responsive, user-friendly interface for donors, patients, volunteers, and administrators to interact with the system.
 
-## Technologies Used
-- **Frontend**: React, Vite, Tailwind CSS, DaisyUI, React Query, Axios, Stripe Elements.
-- **Backend**: Node.js, Express, MongoDB, JWT, Stripe API.
+The client communicates with a RESTful backend API and focuses on clean UI/UX, efficient data fetching, and real-world usability.
 
-## Admin Credentials
-- **Email**: jahanebnadelower@gmail.com
-- **Password**: asdfghjkl
+## ✨ Features
 
-## Setup Instructions
-1. Clone the repository.
-2. `cd server` -> `npm install` -> `npm start`
-3. `cd client/Blood Donation app v3` -> `npm install` -> `npm run dev`
-=======
-# 🩸 Blood Donation Management System – Client
+- 🔐 **Firebase Authentication**: Secure role-based access control (Admin, Volunteer, Donor).
+- 📍 **Location-based Search**: Filter donors by District and Upazila.
+- 🩸 **Donation Requests**: Create, manage, and view donation requests.
+- 💳 **Stripe Payment**: Integrated donation funding via Stripe Checkout (Redirect Flow).
+- ⚡ **TanStack Query**: Efficient server-state management with caching and revalidation.
+- 🎨 **Modern UI**: Full responsive design using TailwindCSS & DaisyUI.
+- 🔔 **Notifications**: Real-time feedback using toast notifications.
 
-A modern, responsive blood donation management web application built with **React + Vite**, **Firebase Authentication**, and **Tailwind CSS (DaisyUI)**.  
-This client handles user authentication, role-based dashboards, donation requests, and donor searching.
+## 🛠 Tech Stack
 
-🔗 **Live Site:** https://your-firebase-app.web.app  
-🔗 **Backend API:** https://your-vercel-server.vercel.app
-
----
-
-## 🚀 Features
-
-### 🔐 Authentication
-- Email & Password authentication (Firebase)
-- Persistent login state
-- Secure logout
-- Role-based access control (Admin | Donor | Volunteer)
-
-### 👥 User Roles
-- **Donor**
-  - Create blood donation requests
-  - View own donation requests
-- **Volunteer**
-  - View all donation requests
-- **Admin**
-  - Manage users
-  - Manage all donation requests
-  - Funding overview
-
-### 🧭 Navigation
-- Protected routes (PrivateRoute)
-- Role-based dashboard sidebar
-- Responsive navbar & layout
-
-### 🎨 UI / UX
-- Fully responsive design
-- Dark mode friendly UI
-- Built with Tailwind CSS + DaisyUI
-- Loading spinners & graceful error handling
-
----
-
-## 🛠️ Tech Stack
-
-### Frontend
-- **React 18**
+- **React (v18+)**
 - **Vite**
-- **React Router**
-- **@tanstack/react-query**
+- **TailwindCSS**
+- **DaisyUI**
+- **TanStack Query**
 - **Axios**
 - **Firebase Authentication**
-- **Tailwind CSS**
-- **DaisyUI**
-- **React Icons**
 
-### Hosting
-- **Firebase Hosting**
+## 📂 Project Structure
 
----
+```
+client/
+├── src/
+│   ├── components/  # Reusable UI components
+│   ├── pages/       # Route pages
+│   ├── hooks/       # Custom hooks (e.g. useAxiosSecure)
+│   ├── context/     # AuthProvider
+│   └── routes/      # Router configuration
+├── public/          # Static assets
+└── README.md
+```
 
-## 📁 Project Structure
+## 🔐 Environment Variables
 
-src/
-│
-├── api/
-│ └── axiosInstance.js
-│
-├── components/
-│ ├── Navbar.jsx
-│ ├── Sidebar.jsx
-│ └── Spinner.jsx
-│
-├── context/
-│ └── AuthContext.jsx
-│
-├── hooks/
-│ ├── useUsers.js
-│ └── useUserRole.js
-│
-├── pages/
-│ ├── Login.jsx
-│ ├── Register.jsx
-│ └── Dashboard/
-│
-├── router/
-│ └── router.jsx
-│
-├── firebase/
-│ └── firebase.init.js
-│
-└── main.jsx
-
-yaml
-Copy code
-
----
-
-## ⚙️ Environment Variables
-
-Create a `.env` file in the root directory:
+Create a `.env` file in the client directory:
 
 ```env
-VITE_apiKey=your_firebase_api_key
-VITE_authDomain=your_firebase_auth_domain
-VITE_projectId=your_firebase_project_id
-VITE_storageBucket=your_firebase_storage_bucket
-VITE_messagingSenderId=your_firebase_sender_id
-VITE_appId=your_firebase_app_id
+VITE_API_KEY=your_firebase_api_key
+VITE_AUTH_DOMAIN=your_firebase_auth_domain
+VITE_PROJECT_ID=your_firebase_project_id
+VITE_STORAGE_BUCKET=your_firebase_storage_bucket
+VITE_MESSAGING_SENDER_ID=your_firebase_messaging_sender_id
+VITE_APP_ID=your_firebase_app_id
+VITE_API_URL=http://localhost:5000  # Or your production API URL
+VITE_STRIPE_PK=pk_test_...         # Stripe Publishable Key
+```
 
-VITE_API_URL=https://your-vercel-server.vercel.app
-⚠️ Never commit .env files to GitHub.
+## ▶️ Getting Started
 
-🧪 Local Development
-1️⃣ Install dependencies
-bash
-Copy code
-npm install
-2️⃣ Run development server
-bash
-Copy code
-npm run dev
-3️⃣ Build for production
-bash
-Copy code
-npm run build
-🔐 Route Protection
-Authenticated routes are protected using Firebase auth state.
+1. **Install Dependencies**
+   ```bash
+   npm install
+   ```
 
-Unauthorized users are redirected to /login.
+2. **Run Development Server**
+   ```bash
+   npm run dev
+   ```
 
-Role-based routes are handled via custom hooks.
+## 🎯 Responsibilities
 
-📦 Deployment
-Client (Firebase Hosting)
-bash
-Copy code
-npm run build
-firebase deploy
-Server (Vercel)
-Handled separately in the server repository.
+- Handle UI rendering and routing.
+- Manage authentication state.
+- Communicate with backend APIs.
+- Validate and submit user input.
+- Display real-time feedback.
 
-🧠 Notes
-React Query is used for efficient server-state management.
+## 👨‍💻 Author
 
-Axios interceptor handles secure API requests.
+**Jahan Ebna Delower**
+*Frontend / Full Stack Web Developer*
 
-Firebase auth state sync ensures smooth login redirects.
-
-Designed for scalability and real-world usage.
-
-📜 License
-This project is for educational and demonstration purposes.
-You may modify and reuse it freely.
-
-✨ Author
-Jahan
-Computer Science Student
-Aspiring Full-Stack Developer — MERN
-Portfolio: https://jahan-d.web.app
-GitHub: https://github.com/jahan-d
+- 🌐 [Portfolio](https://jahan-d.web.app)
+- 💻 [GitHub](https://github.com/jahan-d)

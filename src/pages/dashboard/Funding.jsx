@@ -1,124 +1,23 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { toast } from "react-hot-toast";
-import { useState } from "react";
-import { useNavigate } from "react-router";
-import { loadStripe } from "@stripe/stripe-js";
-import { Elements, CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router"; // react-router v6+
 import { useAuth } from "../../contexts/AuthContext/AuthProvider";
-
-// Initialize Stripe (Replace with your actual Publishable Key)
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PK || "pk_test_51L1nmKBCp6l...example");
-
-const CheckoutForm = ({ amount, closeModal }) => {
-  const stripe = useStripe();
-  const elements = useElements();
-  const [processing, setProcessing] = useState(false);
-  const { user } = useAuth();
-  const token = localStorage.getItem("access-token");
-  const queryClient = useQueryClient();
-
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-
-    if (!stripe || !elements) return;
-
-    const card = elements.getElement(CardElement);
-    if (!card) return;
-
-    setProcessing(true);
-
-    try {
-      // 1. Create Payment Intent
-      const { data } = await axios.post(
-        `${import.meta.env.VITE_API_URL}/create-payment-intent`,
-        { amount: Number(amount) },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      const clientSecret = data.clientSecret;
-
-      // 2. Confirm Payment
-      const { paymentIntent, error } = await stripe.confirmCardPayment(clientSecret, {
-        payment_method: {
-          card: card,
-          billing_details: {
-            name: user?.displayName || user?.name || "Donor",
-            email: user?.email || "donor@example.com"
-          },
-        },
-      });
-
-      if (error) {
-        toast.error(error.message);
-        setProcessing(false);
-        return;
-      }
-
-      if (paymentIntent.status === "succeeded") {
-        // 3. Save to Funds Collection
-        await axios.post(
-          `${import.meta.env.VITE_API_URL}/funds`,
-          {
-            amount: Number(amount),
-            transactionId: paymentIntent.id,
-            userName: user?.displayName || user?.name || "Anonymous Donor",
-          },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-
-        toast.success("Donation successful!");
-        queryClient.invalidateQueries(["fundings"]);
-        closeModal();
-      }
-
-    } catch (err) {
-      // console.error(err);
-      toast.error("Payment failed");
-    }
-    setProcessing(false);
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="p-4 border rounded bg-base-100">
-        <CardElement
-          options={{
-            style: {
-              base: {
-                fontSize: "16px",
-                color: "#424770",
-                "::placeholder": {
-                  color: "#aab7c4",
-                },
-              },
-              invalid: {
-                color: "#9e2146",
-              },
-            },
-          }}
-        />
-      </div>
-      <button
-        type="submit"
-        disabled={!stripe || processing}
-        className="btn btn-primary w-full"
-      >
-        {processing ? "Processing..." : `Pay $${amount}`}
-      </button>
-    </form>
-  );
-};
 
 const Funding = () => {
   const [amount, setAmount] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const { user } = useAuth();
+  const token = localStorage.getItem("access-token");
+  const queryClient = useQueryClient();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
 
   // FETCH FUNDS
   const [page, setPage] = useState(1);
   const limit = 10;
 
-  // FETCH FUNDS
   const { data, isLoading } = useQuery({
     queryKey: ["fundings", page],
     queryFn: async () => {
@@ -134,6 +33,77 @@ const Funding = () => {
   const funds = data?.funds || [];
   const total = data?.total || 0;
   const totalPages = Math.ceil(total / limit);
+
+  // Handle Payment Success Return
+  useEffect(() => {
+    const success = searchParams.get("success");
+    const sessionId = searchParams.get("session_id");
+    const amountVal = searchParams.get("amount");
+
+    if (success === "true" && sessionId && amountVal) {
+      // Confirm and Save to Database
+      const savePayment = async () => {
+        try {
+          // Idempotency check handled by server (409 if exists)
+          await axios.post(
+            `${import.meta.env.VITE_API_URL}/funds`,
+            {
+              amount: Number(amountVal),
+              transactionId: sessionId,
+              userName: user?.displayName || user?.name || "Anonymous Donor",
+            },
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          toast.success("Payment Verified & Recorded!");
+          queryClient.invalidateQueries(["fundings"]);
+        } catch (error) {
+          if (error.response?.status === 409) {
+            // Already recorded, just show success
+            // toast.success("Donation already recorded.");
+          } else {
+            console.error("Payment Save Error:", error);
+            toast.error("Could not verify payment.");
+          }
+        } finally {
+          // Clear params to prevent re-trigger on refresh
+          setSearchParams({});
+          navigate("/dashboard/funding", { replace: true });
+        }
+      };
+
+      savePayment();
+    } else if (searchParams.get("canceled") === "true") {
+      toast.error("Payment Canceled");
+      setSearchParams({});
+      navigate("/dashboard/funding", { replace: true });
+    }
+  }, [searchParams, user, token, queryClient, navigate, setSearchParams]);
+
+
+  // Handle Initiate Payment (Redirect)
+  const handleDonate = async () => {
+    if (!amount || Number(amount) <= 0) {
+      toast.error("Please enter a valid amount");
+      return;
+    }
+
+    const toastId = toast.loading("Redirecting to Stripe...");
+    try {
+      const { data } = await axios.post(
+        `${import.meta.env.VITE_API_URL}/create-checkout-session`,
+        { amount: Number(amount) },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      // Redirect to Stripe
+      window.location.href = data.url;
+
+    } catch (error) {
+      console.error("Initiate Error:", error);
+      toast.error("Failed to start payment");
+      toast.dismiss(toastId);
+    }
+  };
 
   return (
     <div className="p-5">
@@ -187,38 +157,29 @@ const Funding = () => {
         </button>
       </div>
 
-      {/* Modal */}
+      {/* Simplified Modal (DaisyUI Standard) */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg w-full max-w-md">
-            <h3 className="text-xl font-bold mb-4">Make a Donation</h3>
+        <div className="modal modal-open">
+          <div className="modal-box bg-base-100 text-base-content">
+            <h3 className="font-bold text-lg text-center mb-4">Donate with Stripe</h3>
+            <p className="text-sm text-center mb-4 opacity-70">You will be redirected to Stripe's secure payment page.</p>
 
-            {!amount ? (
-              <div className="space-y-4">
-                <label className="label">Enter Amount ($)</label>
-                <input
-                  type="number"
-                  className="input input-bordered w-full"
-                  onChange={(e) => setAmount(e.target.value)}
-                />
-                <button
-                  className="btn btn-primary w-full"
-                  onClick={() => { if (!amount) toast.error("Enter amount"); }}
-                >
-                  Next
-                </button>
-              </div>
-            ) : (
-              <Elements stripe={stripePromise}>
-                <CheckoutForm amount={amount} closeModal={() => { setIsModalOpen(false); setAmount(""); }} />
-              </Elements>
-            )}
-            <button
-              className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
-              onClick={() => { setIsModalOpen(false); setAmount(""); }}
-            >✕</button>
-            <div className="modal-action">
-              <button className="btn" onClick={() => { setIsModalOpen(false); setAmount(""); }}>Close</button>
+            <div className="form-control w-full max-w-xs mx-auto mb-6">
+              <label className="label">
+                <span className="label-text">Amount (BDT)</span>
+              </label>
+              <input
+                type="number"
+                placeholder="Ex. 100"
+                className="input input-bordered w-full"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+              />
+            </div>
+
+            <div className="modal-action justify-center">
+              <button className="btn btn-ghost" onClick={() => { setIsModalOpen(false); setAmount(""); }}>Cancel</button>
+              <button className="btn btn-primary" onClick={handleDonate} disabled={!amount}>Pay Now</button>
             </div>
           </div>
         </div>
