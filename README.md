@@ -4,7 +4,10 @@
 A MERN stack application to connect blood donors with those in need.
 
 ## Live URL
-[Insert your Vercel/Firebase Live URL here]
+[
+blooddonationapp-lsuveq169-jahan-ds-projects.vercel.app
+blooddonationappv3.web.app/
+]
 
 ## Features
 - **Authentication**: JWT-based login/register with functionality for Donors, Volunteers, and Admins.
@@ -185,5 +188,6 @@ You may modify and reuse it freely.
 ✨ Author
 Jahan
 Computer Science Student
-Aspiring Full-Stack Developer
->>>>>>> df15295966f80ee2f34bbbe0e0bb2289c0549546
+Aspiring Full-Stack Developer — MERN
+Portfolio: https://jahan-d.web.app
+GitHub: https://github.com/jahan-d
