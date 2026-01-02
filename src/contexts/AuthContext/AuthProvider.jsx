@@ -53,8 +53,11 @@ const AuthProvider = ({ children }) => {
     });
 
     // Manual sync to handle race condition with onAuthStateChanged
+    // Securely get ID token
+    const idToken = await result.user.getIdToken();
     const tokenRes = await axios.post(`${import.meta.env.VITE_API_URL}/jwt`, {
       email,
+      token: idToken,
     });
     localStorage.setItem("access-token", tokenRes.data.token);
     const profileRes = await axiosSecure.get("/users/profile");
@@ -83,8 +86,11 @@ const AuthProvider = ({ children }) => {
       if (currentUser?.email) {
         try {
           // Get JWT from backend
+          // Get JWT from backend using ID Token
+          const idToken = await currentUser.getIdToken();
           const res = await axios.post(`${import.meta.env.VITE_API_URL}/jwt`, {
             email: currentUser.email,
+            token: idToken,
           });
           localStorage.setItem("access-token", res.data.token);
 

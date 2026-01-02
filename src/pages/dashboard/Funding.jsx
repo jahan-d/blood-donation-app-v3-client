@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements, CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
+import { useAuth } from "../../contexts/AuthContext/AuthProvider";
 
 // Initialize Stripe (Replace with your actual Publishable Key)
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PK || "pk_test_51L1nmKBCp6l...example");
@@ -13,12 +14,9 @@ const CheckoutForm = ({ amount, closeModal }) => {
   const stripe = useStripe();
   const elements = useElements();
   const [processing, setProcessing] = useState(false);
-  const { user } = useAuth(); // Assuming useAuth is available or passed via props
+  const { user } = useAuth();
   const token = localStorage.getItem("access-token");
   const queryClient = useQueryClient();
-
-  // Helper to get user info if not passed directly, but we can assume parent passes it or we fetch form context
-  // For simplicity, we just use what we have.
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -34,7 +32,7 @@ const CheckoutForm = ({ amount, closeModal }) => {
       // 1. Create Payment Intent
       const { data } = await axios.post(
         `${import.meta.env.VITE_API_URL}/create-payment-intent`,
-        { amount: parseInt(amount) },
+        { amount: Number(amount) },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -45,8 +43,8 @@ const CheckoutForm = ({ amount, closeModal }) => {
         payment_method: {
           card: card,
           billing_details: {
-            name: "Donor", // Can be dynamic
-            email: "donor@example.com"
+            name: user?.displayName || user?.name || "Donor",
+            email: user?.email || "donor@example.com"
           },
         },
       });
@@ -62,9 +60,9 @@ const CheckoutForm = ({ amount, closeModal }) => {
         await axios.post(
           `${import.meta.env.VITE_API_URL}/funds`,
           {
-            amount: parseInt(amount),
+            amount: Number(amount),
             transactionId: paymentIntent.id,
-            userName: "Donor", // ideally from auth
+            userName: user?.displayName || user?.name || "Anonymous Donor",
           },
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -111,9 +109,6 @@ const CheckoutForm = ({ amount, closeModal }) => {
     </form>
   );
 };
-
-// Need to import useAuth to get user name usually, but let's keep it simple
-import { useAuth } from "../../contexts/AuthContext/AuthProvider";
 
 const Funding = () => {
   const [amount, setAmount] = useState("");

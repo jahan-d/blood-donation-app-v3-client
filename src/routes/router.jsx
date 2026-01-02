@@ -31,6 +31,7 @@ import RoleRoute from "../components/RoleRoute";
 const adminRoles = ["admin"];
 const donorRoles = ["donor"];
 const volunteerRoles = ["volunteer"];
+const adminAndVolunteerRoles = ["admin", "volunteer"];
 
 export const router = createBrowserRouter([
   {
@@ -61,47 +62,43 @@ export const router = createBrowserRouter([
 
       // Donor routes
       {
-        element: (
-          <RoleRoute allowedRoles={donorRoles}>
-            <></>
-          </RoleRoute>
-        ),
+        element: <RoleRoute allowedRoles={donorRoles}><Outlet /></RoleRoute>,
         children: [
           { path: "my-donation-requests", element: <MyDonationRequests /> },
           { path: "create-donation-request", element: <CreateDonationRequest /> },
         ],
       },
 
-      // Admin routes
+      // Shared Admin & Volunteer Routes
       {
-        element: (
-          <RoleRoute allowedRoles={adminRoles}>
-            <></>
-          </RoleRoute>
-        ),
+        element: <RoleRoute allowedRoles={adminAndVolunteerRoles}><Outlet /></RoleRoute>,
         children: [
-          { path: "all-users", element: <AllUsers /> },
           { path: "all-donation-requests", element: <AllDonationRequests /> },
           { path: "funding", element: <Funding /> },
           { path: "content-management-add-blog", element: <AddBlog /> },
         ],
       },
 
-      // Volunteer routes
+      // Admin Only routes
       {
-        element: (
-          <RoleRoute allowedRoles={volunteerRoles}>
-            <></>
-          </RoleRoute>
-        ),
+        element: <RoleRoute allowedRoles={adminRoles}><Outlet /></RoleRoute>,
         children: [
-          { path: "all-donation-requests", element: <AllDonationRequests /> },
-          { path: "funding", element: <Funding /> },
-          { path: "content-management-add-blog", element: <AddBlog /> },
+          { path: "all-users", element: <AllUsers /> },
         ],
       },
+
+      // Volunteer Only routes (if any in future)
+      /* 
+      {
+        element: <RoleRoute allowedRoles={volunteerRoles}><Outlet /></RoleRoute>,
+        children: []
+      }
+      */
     ],
   },
 
   { path: "*", element: <ErrorPage /> },
 ]);
+
+// Helper Outlet component since RoleRoute expects children, but we are using Layout Route style
+import { Outlet } from "react-router";
