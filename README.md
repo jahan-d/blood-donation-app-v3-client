@@ -1,106 +1,49 @@
 # Blood Donation App v3 — Client
 
-A production-ready README for the frontend client of the Blood Donation App v3. Replace the placeholders with framework-specific commands and values.
+This repository is the frontend for the Blood Donation App v3. It is a Vite + React single-page application that uses Tailwind/DaisyUI for styling, Firebase for auth/storage helpers, and the Stripe JS libraries for payments. The app communicates with the backend API over an environment-configured base URL.
 
-## Table of contents
-- Overview
-- Production checklist
-- Tech stack
-- Features
-- Architecture
-- Requirements
-- Environment variables
-- Local development
-- Production build & deployment
-- Docker
-- Testing
-- CI / CD
-- Monitoring & logging
-- Security
-- Maintenance & backups
-- Contributing
-- License & contact
+Quick facts (repo analysis):
+- Framework: React + Vite
+- Dev server: `npm run dev` (Vite)
+- Production build: `npm run build` → output directory: `dist/`
+- Preview: `npm run preview` (Vite preview)
+- Key dependencies: react, react-dom, react-router, @tanstack/react-query, firebase, @stripe/*, tailwindcss, daisyui, axios
 
-## Overview
-Blood Donation App v3 (Client) is the frontend for the Blood Donation platform. It provides the user interface for donors, recipients, and administrators to manage donation events, requests, and user profiles.
+Requirements
+- Node.js 18+ (recommended)
+- npm (use the lockfile: package-lock.json)
+- A running backend API and required environment variables (see below)
 
-This README is tuned for production usage — it includes recommended environment variables, build & deployment steps, and operational considerations.
-
-## Production checklist (quick)
-- [ ] Pin dependency versions and use lockfiles (package-lock.json / yarn.lock / pnpm-lock.yaml)
-- [ ] Configure secure environment variables (not checked into repo)
-- [ ] Build artifacts in CI and publish to an artifact registry or static hosting
-- [ ] Serve via a CDN or static-file server with gzip/Brotli and long-lived caching
-- [ ] Use SRI or trusted subresource loading if loading third-party scripts
-- [ ] Run accessibility (a11y) and performance audits during CI
-- [ ] Set up error reporting (Sentry / LogRocket)
-- [ ] Enable CSP and secure headers at the hosting layer
-
-## Tech stack
-- Frontend framework: <React / Vue / Svelte / Next.js / Remix — choose one>
-- Language: JavaScript
-- Bundler: <Vite / Webpack / Next.js build>
-- Styling: <Tailwind / CSS Modules / SASS> (optional)
-- Static hosting: <Netlify / Vercel / S3 + CloudFront / Firebase Hosting>
-- Auth: JWT / OAuth (backend-provided)
-- State: <Redux / Zustand / Context API / Pinia>
-
-## Features
-- User onboarding & authentication
-- Donor profiles and availability
-- Request creation and management
-- Event listing and registration
-- Admin dashboard for approvals and analytics
-- Responsive UI for desktop & mobile
-
-## Architecture
-- Single-page application (SPA) served as static files
-- Communicates with backend via REST or GraphQL at API base URL (see environment variables)
-- Client-side routing (or server-side routing if using SSR frameworks)
-- All secrets and sensitive logic reside in backend services
-
-## Requirements
-- Node.js >= 16
-- npm >= 8 or yarn or pnpm
-- A running backend API and configured env vars
-
-## Environment variables
-Create a `.env` (local; do NOT commit). Example:
-- REACT_APP_API_BASE_URL=https://api.example.com
-- REACT_APP_SENTRY_DSN= (optional)
+Environment variables — create a local `.env` file (do not commit secrets)
+- VITE_API_BASE_URL=https://api.example.com       # Base URL of the backend API
+- VITE_FIREBASE_API_KEY=your_firebase_api_key
+- VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+- VITE_FIREBASE_PROJECT_ID=your_project_id
+- VITE_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
+- VITE_STRIPE_PUBLISHABLE_KEY=pk_live_or_pk_test_...
+- VITE_SENTRY_DSN= (optional)
 - NODE_ENV=development|production
-- ANALYTICS_ID= (optional)
 
-Replace prefix depending on framework (e.g., NEXT_PUBLIC_, VITE_).
-
-## Local development
-1. Clone
+Local development
+1. Clone the repo:
    git clone https://github.com/jahan-d/blood-donation-app-v3-client.git
-2. Install
+2. Install dependencies:
    npm ci
-   or
-   yarn install
-3. Start dev server
+3. Start the dev server:
    npm run dev
-   or
-   yarn dev
-4. Open in browser at http://localhost:3000 (or framework default)
+4. Open the app at http://localhost:5173 (Vite default)
 
-## Production build & deployment
-1. Build
+Production build & deploy
+1. Build production assets:
    npm run build
-   or
-   yarn build
-2. Verify build artifacts in `build/` or `.next/` (framework-specific)
-3. Deploy static files to hosting provider:
-   - S3 + CloudFront: upload build artifacts and invalidate cache
-   - Vercel / Netlify: connect repo and allow CI to build
-4. Use a CDN, enable compression (Brotli/gzip), and enable HTTP/2 or HTTP/3
+2. The production-ready files are in `dist/` — verify and publish to your static host.
 
-## Docker (example)
-A simple multi-stage Docker build for static sites:
+Recommended hosting options
+- Vercel or Netlify: Connect the repository and let the platform build & deploy.
+- S3 + CloudFront: Upload `dist/`, configure caching and invalidation.
+- Serve behind a CDN with TLS, Brotli/gzip compression and long cache TTLs for static assets.
 
-Dockerfile
+Docker (example multi-stage for static serving)
 ```
 # Stage 1: build
 FROM node:18-alpine AS build
@@ -112,54 +55,27 @@ RUN npm run build
 
 # Stage 2: serve
 FROM nginx:stable-alpine
-COPY --from=build /app/build /usr/share/nginx/html
-COPY ./nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=build /app/dist /usr/share/nginx/html
+# Optionally add a custom nginx.conf to enable security headers
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
 ```
 
-Adjust paths and commands to match your framework.
+CI recommendation (GitHub Actions)
+- Steps: `actions/checkout`, `actions/setup-node`, `npm ci`, `npm run lint`, `npm run build`, and optional `firebase deploy` or upload to hosting provider.
 
-## Running behind a CDN / reverse proxy
-- Serve only static assets on the CDN edge.
-- Terminate TLS at CDN or reverse proxy.
-- Apply security headers (CSP, HSTS, X-Frame-Options, X-Content-Type-Options).
+Testing
+- Add unit tests (Jest/Vitest) and E2E tests (Cypress/Playwright) and run them in CI.
 
-## Testing
-- Unit tests: `npm test`
-- E2E tests: Cypress / Playwright — run against a local or staging environment.
-- Include tests in CI and gate merges based on test results.
+Observability & security
+- Add client error tracking (Sentry or LogRocket) and Real User Monitoring.
+- Keep secrets out of the client. Use server-side endpoints for any sensitive operations.
+- Add a Content Security Policy at the CDN or reverse proxy level.
 
-## CI / CD recommendations
-- Build artifacts in CI
-- Run lint, type checks (if using TypeScript), unit tests, and a11y checks
-- Publish production build as an artifact or directly deploy via a provider (Vercel/Netlify/Github Actions -> S3)
-- Use feature branches and protected branch rules for main
+Maintenance & contribution
+- Use branches and PRs. Ensure CI passes before merging.
+- Keep the `package-lock.json` committed and run `npm audit` regularly.
 
-## Monitoring & logging
-- Integrate Sentry, LogRocket, or similar for client-side errors
-- Capture performance metrics (Lighthouse, RUM)
-- Track release versions and associate client builds with backend releases
-
-## Security
-- Never store secrets in repo; use a secrets manager or provider env
-- Use Subresource Integrity (SRI) where practical for third-party scripts
-- Keep dependencies up-to-date; run `npm audit` in CI
-- Use CSP and secure headers from the CDN or reverse proxy
-
-## Maintenance & backups
-- Keep a changelog and release notes
-- Tag releases and record build artifacts
-- Maintain an issue tracker for user-reported bugs and security incidents
-
-## Contributing
-1. Fork the repo
-2. Create a feature branch
-3. Open a PR with a clear description and tests
-4. Ensure CI passes before merge
-
-## License
-This project is licensed under the <LICENSE NAME> — see the LICENSE file for details.
-
-## Contact
-For questions and support, contact: <maintainer@example.com> or open an issue on this repository.
+License & contact
+- Add a LICENSE file (e.g., MIT) at the repo root.
+- For questions, open an issue or contact: jahanebnadelower@gmail.com
